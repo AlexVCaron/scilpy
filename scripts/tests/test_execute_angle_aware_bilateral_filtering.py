@@ -6,8 +6,10 @@ import numpy as np
 import os
 import pytest
 import tempfile
+from shutil import copyfile
 
 from scilpy.io.fetcher import get_testing_files_dict, fetch_data, get_home
+from scilpy.tests.checks import assert_images_close
 from scilpy.tests.checks import assert_images_close
 
 
@@ -23,7 +25,20 @@ def filter_mock(mocker, apply_mocks, out_fodf):
         def _mock_side_effect(*args, **kwargs):
             img = nib.load(out_fodf)
             return img.get_fdata(dtype=np.float32)
+@pytest.fixture(scope='function')
+def filter_mock(mocker, apply_mocks, out_fodf):
+    if apply_mocks:
+        def _mock_side_effect(*args, **kwargs):
+            img = nib.load(out_fodf)
+            return img.get_fdata(dtype=np.float32)
 
+        return mocker.patch(
+            "{}.{}".format(
+                "scripts.scil_execute_angle_aware_bilateral_filtering",
+                "angle_aware_bilateral_filtering"),
+            side_effect=_mock_side_effect, create=True)
+
+    return None
         return mocker.patch(
             "{}.{}".format(
                 "scripts.scil_execute_angle_aware_bilateral_filtering",
@@ -63,6 +78,9 @@ def test_asym_basis_output(
     if apply_mocks:
         filter_mock.assert_called_once()
 
+    if apply_mocks:
+        filter_mock.assert_called_once()
+
     assert_images_close(nib.load(out_fodf), nib.load("out_fodf1.nii.gz"))
 
 
@@ -71,7 +89,10 @@ def test_asym_basis_output(
       os.path.join(data_path, "fodf_descoteaux07_sub_full.nii.gz"),
       os.path.join(data_path, "fodf_descoteaux07_sub_sym.nii.gz")]],
     scope='function')
+      os.path.join(data_path, "fodf_descoteaux07_sub_sym.nii.gz")]],
+    scope='function')
 def test_sym_basis_output(
+    script_runner, filter_mock, apply_mocks, in_fodf, out_fodf, sym_fodf):
     script_runner, filter_mock, apply_mocks, in_fodf, out_fodf, sym_fodf):
     os.chdir(os.path.expanduser(tmp_dir.name))
 
@@ -92,11 +113,17 @@ def test_sym_basis_output(
     if apply_mocks:
         filter_mock.assert_called_once()
 
+    if apply_mocks:
+        filter_mock.assert_called_once()
+
     assert_images_close(nib.load(sym_fodf), nib.load("out_sym.nii.gz"))
 
 
 @pytest.mark.parametrize("in_fodf,out_fodf",
     [[os.path.join(data_path, "fodf_descoteaux07_sub_full.nii.gz"),
+      os.path.join(data_path, "fodf_descoteaux07_sub_twice.nii.gz")]],
+    scope='function')
+def test_asym_input(script_runner, filter_mock, apply_mocks, in_fodf, out_fodf):
       os.path.join(data_path, "fodf_descoteaux07_sub_twice.nii.gz")]],
     scope='function')
 def test_asym_input(script_runner, filter_mock, apply_mocks, in_fodf, out_fodf):
