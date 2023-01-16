@@ -6,7 +6,6 @@ import numpy as np
 import os
 import pytest
 import tempfile
-from shutil import copyfile
 
 from scilpy.io.fetcher import get_testing_files_dict, fetch_data, get_home
 from scilpy.tests.checks import assert_images_close
@@ -64,9 +63,6 @@ def test_asym_basis_output(
     if apply_mocks:
         filter_mock.assert_called_once()
 
-    copyfile(in_fodf, "/mnt/d/in_fodf1.nii.gz")
-    copyfile("out_fodf1.nii.gz", "/mnt/d/out_fodf1.nii.gz")
-    copyfile(out_fodf, "/mnt/d/out_fodf1_cmp.nii.gz")
     assert_images_close(nib.load(out_fodf), nib.load("out_fodf1.nii.gz"))
 
 
@@ -96,11 +92,6 @@ def test_sym_basis_output(
     if apply_mocks:
         filter_mock.assert_called_once()
 
-    copyfile(in_fodf, "/mnt/d/in_fodf2.nii.gz")
-    copyfile("out_fodf2.nii.gz", "/mnt/d/out_fodf2.nii.gz")
-    copyfile(out_fodf, "/mnt/d/out_fodf2_cmp.nii.gz")
-    copyfile("out_sym.nii.gz", "/mnt/d/out_sym.nii.gz")
-    copyfile(sym_fodf, "/mnt/d/out_sym_cmp.nii.gz")
     assert_images_close(nib.load(sym_fodf), nib.load("out_sym.nii.gz"))
 
 
@@ -127,7 +118,4 @@ def test_asym_input(script_runner, filter_mock, apply_mocks, in_fodf, out_fodf):
     if apply_mocks:
         filter_mock.assert_called_once()
 
-    copyfile(in_fodf, "/mnt/d/in_fodf3.nii.gz")
-    copyfile("out_fodf3.nii.gz", "/mnt/d/out_fodf3.nii.gz")
-    copyfile(out_fodf, "/mnt/d/out_fodf3_cmp.nii.gz")
     assert_images_close(nib.load(out_fodf), nib.load("out_fodf3.nii.gz"))
