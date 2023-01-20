@@ -1,0 +1,15 @@
+name: Scilpy release
+
+on:
+  release:
+    types:
+      - "released"
+      - "prereleased"
+
+jobs:
+  freeze_Requirements:
+    uses: scilus/scilpy/.github/workflows/freeze_requirements.yml@main
+    with:
+      cache_key: frozen_requirements-scilpy-${{ github.event.release.tag_name }}
+      python_version: 3.7
+    secrets: inherit

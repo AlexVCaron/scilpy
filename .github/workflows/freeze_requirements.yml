@@ -1,0 +1,43 @@
+name: Freeze requirements
+
+on:
+  workflow_call: &workflow_inputs
+    inputs:
+      cache_key:
+        description: |
+          A unique key for a cache entry.
+          WILL OVERWRITE ANY CACHE KEY PROVIDED !
+        required: true
+        type: string
+      python_version:
+        description: version for the python interpreter
+        required: true
+        type: string
+  workflow_dispatch: *workflow_inputs
+
+jobs:
+  generate_requirements:
+    runs-on: ubuntu-latest
+
+    steps:
+      -
+        name: Setup python for Scilpy
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python_version }}
+      - 
+        uses: actions/checkout@v3
+        name: Check out repository
+      -
+        name: Install Scilpy and freeze requirements
+        id: requirements
+        run: |
+          python${{ inputs.python_version }} -m pip install -e .
+          python${{ inputs.python_version }} -m pip freeze > requirements.frozen
+          echo "requirements-file=$PWD/requirements.frozen" >> $GITHUB_OUTPUT
+      -
+        uses: actions/cache/save@v3.2.3
+        name: Cache frozen requirements
+        with:
+          path: ${{ steps.requirements.outputs.requirements-file }}
+          key: ${{ inputs.cache_key }}
