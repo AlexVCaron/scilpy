@@ -72,7 +72,8 @@ opts = dict(name=NAME,
             entry_points={
                 'console_scripts': ["{}=scripts.{}:main".format(
                     os.path.basename(s),
-                    os.path.basename(s).split(".")[0]) for s in SCRIPTS]
+                    os.path.basename(s).split(".")[0]) for s in SCRIPTS],
+                'pytest11': ["scilpy-testing=scilpy.tests.pytest_plugin"]
             },
             data_files=[('data/LUT',
                          ["data/LUT/freesurfer_desikan_killiany.json",
