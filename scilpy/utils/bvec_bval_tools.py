@@ -6,8 +6,10 @@ from enum import Enum
 import numpy as np
 
 from scilpy.image.utils import volume_iterator
-from scilpy.gradientsampling.save_gradient_sampling import (save_gradient_sampling_fsl,
-                                                            save_gradient_sampling_mrtrix)
+from scilpy.gradientsampling.save_gradient_sampling import (
+    save_gradient_sampling_fsl,
+    save_gradient_sampling_mrtrix,
+    save_gradient_sampling_siemens)
 
 DEFAULT_B0_THRESHOLD = 20
 
@@ -140,6 +142,66 @@ def get_shell_indices(bvals, shell, tol=10):
 
     return np.where(
         np.logical_and(bvals < shell + tol, bvals > shell - tol))[0]
+
+
+def fsl2siemens(
+    fsl_bval_filename, fsl_bvec_filename, siemens_filename,
+    rot_to_image=np.eye(3), b_nominal=None, normalization="none"
+):
+    """
+    Convert a fsl dir_grad.bvec/.bval files to siemens encoding.dvs file.
+
+    Parameters
+    ----------
+    fsl_bval_filename: str
+        path to input fsl bval file.
+    fsl_bvec_filename: str
+        path to input fsl bvec file.
+    siemens_filename: str
+        path to output siemens encoding.dvs file.
+    rot_to_image: np.ndarray, optional
+        rotation from world to image space to transform bvecs.
+    b_nominal: int, optional
+        nominal b-value to consider when creating the siemens table. 
+        Defaults to the maximal b-value in fsl_bvec_filename
+    normalization: str, optional
+        normalization strategy to adopt when converting the b-values. If none, 
+        the b-vectors are scaled as sqrt(bval / b_nominal). If maximum, the 
+        b-vectors are scaled as bval / max(bval). Else, considering the last 
+        case being unitary, all b-vectors are normalized, if all b-values are 
+        identical.
+    Returns
+    -------
+    """
+
+    def _normalize(_bv, _nb, _nrm):
+        if _nrm == "none":
+            return np.sqrt(_bv / _nb)
+        elif _nrm == "unity":
+            return np.ones_like(_bv)
+        elif _nrm == "maximum":
+            return _bv / _nb
+
+    shells = np.loadtxt(fsl_bval_filename)
+    points = np.loadtxt(fsl_bvec_filename)
+    bvals = np.unique(shells)
+    b_nominal = b_nominal or max(bvals)
+
+    if len(bvals) > 1 and normalization == "unity":
+        logging.error('ERROR: unity normalization is valid only ' + 
+                      'if all directions have the same b-value')
+
+    if not points.shape[0] == 3:
+        points = points.transpose()
+        logging.warning('WARNING: Your bvecs seem transposed. ' +
+                        'Transposing them.')
+
+    shell_idx = [int(np.where(bval == bvals)[0]) for bval in shells]
+    save_gradient_sampling_siemens(np.linalg.inv(rot_to_image) @ points,
+                                   shell_idx,
+                                   _normalize(bvals, b_nominal, normalization),
+                                   normalization,
+                                   siemens_filename)
 
 
 def fsl2mrtrix(fsl_bval_filename, fsl_bvec_filename, mrtrix_filename):

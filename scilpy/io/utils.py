@@ -98,6 +98,7 @@ def assert_gradients_filenames_valid(parser, filename_list, gradient_format):
 
     valid_fsl_extensions = ['.bval', '.bvec']
     valid_mrtrix_extension = '.b'
+    valid_siemens_extension = '.dvs'
 
     if isinstance(filename_list, str):
         filename_list = [filename_list]
@@ -134,8 +135,20 @@ def assert_gradients_filenames_valid(parser, filename_list, gradient_format):
                              'valid for mrtrix format.'.format(basename, ext))
         else:
             parser.error('You should have one file for mrtrix format.')
+    elif gradient_format == 'siemens':
+        if len(filename_list) == 1:
+            curr_filename = filename_list[0]
+            basename, ext = os.path.splitext(curr_filename)
+            if basename == '' or ext != valid_siemens_extension:
+                parser.error('Basename: {} and extension {} are not '
+                             'valid for siemens format.'.format(basename, ext))
+        else:
+            parser.error('You should have one file for siemens format.')
     else:
-        parser.error('Gradient file format should be either fsl or mrtrix.')
+        parser.error(
+            'Gradient file format should be either fsl, mrtrix or siemens :\n    {}.'.format(
+                "\n    ".join(filename_list)
+            ))
 
 
 def add_json_args(parser):
