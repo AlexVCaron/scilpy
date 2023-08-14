@@ -6,18 +6,132 @@ from enum import Enum
 import numpy as np
 
 from scilpy.image.utils import volume_iterator
+from scilpy.gradientsampling.load_gradient_sampling import (
+    load_gradient_sampling_fsl,
+    load_gradient_sampling_mrtrix,
+    load_gradient_sampling_siemens)
 from scilpy.gradientsampling.save_gradient_sampling import (
     save_gradient_sampling_fsl,
     save_gradient_sampling_mrtrix,
     save_gradient_sampling_siemens)
 
-DEFAULT_B0_THRESHOLD = 20
 
+DEFAULT_B0_THRESHOLD = 20
+SUPPORTED_FORMATS = ["fsl", "mrtrix", "siemens"]
+SIEMENS_NORMALIZATION = ["none", "unity", "maximum"]
 
 class B0ExtractionStrategy(Enum):
     FIRST = "first"
     MEAN = "mean"
     ALL = "all"
+
+
+class GradientProtocol:
+    def __init__(self, bvals=None, shell_idx=None, points=None):
+        self.points = points
+        self.bvals = bvals
+        self.shell_idx = shell_idx
+        self.is_initialized = not any(
+            [s is None for s in [points, bvals, shell_idx]])
+
+    def _normalize(self, _bv, _nb, _nrm):
+        if _nrm == "none":
+            return np.sqrt(_bv / _nb)
+        elif _nrm == "unity":
+            return np.ones_like(_bv)
+        elif _nrm == "maximum":
+            return _bv / _nb
+
+    @classmethod
+    def from_fsl(cls, bval, bvec):
+        return GradientProtocol(*load_gradient_sampling_fsl(bval, bvec))
+
+    @classmethod
+    def from_mrtrix(cls, protocol_b):
+        return GradientProtocol(*load_gradient_sampling_mrtrix(protocol_b))
+
+    @classmethod
+    def from_siemens(cls, protocol_dvs, b_nominal=None, ref_affine=None):
+        return GradientProtocol(*load_gradient_sampling_siemens(
+            protocol_dvs, b_nominal, ref_affine))
+
+    def save(
+        self, target_format, output_fname,
+        b_nominal=None, normalization="none", ref_affine=None
+    ):
+        if not self.is_initialized:
+            logging.error(
+                "Gradient protocol writer has no data to write. Either supply "
+                "the directions, bvalues, shells when creating the writer, or "
+                "initialize using one of the reading factories :\n"
+                "  - GradientProtocol.from_fsl(bval, bvec)\n"
+                "  - GradientProtocol.from_mrtrix(b)\n"
+                "  - GradientProtocol.from_siemens(dvs)")
+
+        if target_format == "fsl":
+            bval = "{}.bval".format(output_fname)
+            bvec = "{}.bvec".format(output_fname)
+            save_gradient_sampling_fsl(self.points,
+                                       self.shell_idx,
+                                       self.bvals,
+                                       filename_bval=bval,
+                                       filename_bvec=bvec)
+        elif target_format == "mrtrix":
+            save_gradient_sampling_mrtrix(self.points,
+                                          self.shell_idx,
+                                          self.bvals,
+                                          "{}.b".format(output_fname))
+        elif target_format == "siemens":
+            if len(self.bvals) > 1 and normalization == "unity":
+                logging.error('ERROR: unity normalization is valid only ' + 
+                              'if all directions have the same b-value')
+
+            b_nominal = b_nominal or max(self.bvals)
+            rot_to_image = np.eye(4) if ref_affine is None else ref_affine
+            save_gradient_sampling_siemens(
+                np.linalg.inv(rot_to_image) @ self.points,
+                self.shell_idx,
+                self._normalize(self.bvals, b_nominal, normalization),
+                normalization,
+                "{}.dvs".format(output_fname))
+
+
+def mrtrix2fsl(mrtrix_file, fsl_bval, fsl_bvec):
+    bvals, shell_idx, points = load_gradient_sampling_mrtrix(mrtrix_file)
+    save_gradient_sampling_fsl(points, shell_idx, bvals, fsl_bval, fsl_bvec)
+
+
+def fsl2mrtrix(fsl_bval, fsl_bvec, mrtrix_file):
+    bvals, shell_idx, points = load_gradient_sampling_fsl(fsl_bval, fsl_bvec)
+    save_gradient_sampling_mrtrix(points, shell_idx, bvals, mrtrix_file)
+
+
+def fsl2siemens(
+    fsl_bval, fsl_bvec, siemens_dvs,
+    ref_affine=None, b_nominal=None, normalization="none"
+):
+    def _normalize(_bv, _nb, _nrm):
+        if _nrm == "none":
+            return np.sqrt(_bv / _nb)
+        elif _nrm == "unity":
+            return np.ones_like(_bv)
+        elif _nrm == "maximum":
+            return _bv / _nb
+
+    bvals, shell_idx, points = load_gradient_sampling_fsl(fsl_bval, fsl_bvec)
+
+    if len(bvals) > 1 and normalization == "unity":
+        logging.error('ERROR: unity normalization is valid only ' + 
+                        'if all directions have the same b-value')
+
+    b_nominal = b_nominal or max(bvals)
+    rot_to_image = np.eye(4) if ref_affine is None else ref_affine
+    save_gradient_sampling_siemens(
+        np.linalg.inv(rot_to_image) @ points,
+        shell_idx,
+        _normalize(bvals, b_nominal, normalization),
+        normalization,
+        siemens_dvs)
 
 
 def is_normalized_bvecs(bvecs):
@@ -142,135 +256,6 @@ def get_shell_indices(bvals, shell, tol=10):
 
     return np.where(
         np.logical_and(bvals < shell + tol, bvals > shell - tol))[0]
-
-
-def fsl2siemens(
-    fsl_bval_filename, fsl_bvec_filename, siemens_filename,
-    rot_to_image=np.eye(3), b_nominal=None, normalization="none"
-):
-    """
-    Convert a fsl dir_grad.bvec/.bval files to siemens encoding.dvs file.
-
-    Parameters
-    ----------
-    fsl_bval_filename: str
-        path to input fsl bval file.
-    fsl_bvec_filename: str
-        path to input fsl bvec file.
-    siemens_filename: str
-        path to output siemens encoding.dvs file.
-    rot_to_image: np.ndarray, optional
-        rotation from world to image space to transform bvecs.
-    b_nominal: int, optional
-        nominal b-value to consider when creating the siemens table. 
-        Defaults to the maximal b-value in fsl_bvec_filename
-    normalization: str, optional
-        normalization strategy to adopt when converting the b-values. If none, 
-        the b-vectors are scaled as sqrt(bval / b_nominal). If maximum, the 
-        b-vectors are scaled as bval / max(bval). Else, considering the last 
-        case being unitary, all b-vectors are normalized, if all b-values are 
-        identical.
-    Returns
-    -------
-    """
-
-    def _normalize(_bv, _nb, _nrm):
-        if _nrm == "none":
-            return np.sqrt(_bv / _nb)
-        elif _nrm == "unity":
-            return np.ones_like(_bv)
-        elif _nrm == "maximum":
-            return _bv / _nb
-
-    shells = np.loadtxt(fsl_bval_filename)
-    points = np.loadtxt(fsl_bvec_filename)
-    bvals = np.unique(shells)
-    b_nominal = b_nominal or max(bvals)
-
-    if len(bvals) > 1 and normalization == "unity":
-        logging.error('ERROR: unity normalization is valid only ' + 
-                      'if all directions have the same b-value')
-
-    if not points.shape[0] == 3:
-        points = points.transpose()
-        logging.warning('WARNING: Your bvecs seem transposed. ' +
-                        'Transposing them.')
-
-    shell_idx = [int(np.where(bval == bvals)[0]) for bval in shells]
-    save_gradient_sampling_siemens(np.linalg.inv(rot_to_image) @ points,
-                                   shell_idx,
-                                   _normalize(bvals, b_nominal, normalization),
-                                   normalization,
-                                   siemens_filename)
-
-
-def fsl2mrtrix(fsl_bval_filename, fsl_bvec_filename, mrtrix_filename):
-    """
-    Convert a fsl dir_grad.bvec/.bval files to mrtrix encoding.b file.
-
-    Parameters
-    ----------
-    fsl_bval_filename: str
-        path to input fsl bval file.
-    fsl_bvec_filename: str
-        path to input fsl bvec file.
-    mrtrix_filename : str
-        path to output mrtrix encoding.b file.
-
-    Returns
-    -------
-    """
-
-    shells = np.loadtxt(fsl_bval_filename)
-    points = np.loadtxt(fsl_bvec_filename)
-    bvals = np.unique(shells).tolist()
-
-    if not points.shape[0] == 3:
-        points = points.transpose()
-        logging.warning('WARNING: Your bvecs seem transposed. ' +
-                        'Transposing them.')
-
-    shell_idx = [int(np.where(bval == bvals)[0]) for bval in shells]
-    save_gradient_sampling_mrtrix(points,
-                                  shell_idx,
-                                  bvals,
-                                  mrtrix_filename)
-
-
-def mrtrix2fsl(mrtrix_filename, fsl_bval_filename=None,
-               fsl_bvec_filename=None):
-    """
-    Convert a mrtrix encoding.b file to fsl dir_grad.bvec/.bval files.
-
-    Parameters
-    ----------
-    mrtrix_filename : str
-        path to mrtrix encoding.b file.
-    fsl_bval_filename: str
-        path to the output fsl bval file. Default is
-        mrtrix_filename.bval.
-    fsl_bvec_filename: str
-        path to the output fsl bvec file. Default is
-        mrtrix_filename.bvec.
-    Returns
-    -------
-    """
-
-    mrtrix_b = np.loadtxt(mrtrix_filename)
-    if not len(mrtrix_b.shape) == 2 or not mrtrix_b.shape[1] == 4:
-        raise ValueError('mrtrix file must have 4 columns')
-
-    points = np.array([mrtrix_b[:, 0], mrtrix_b[:, 1], mrtrix_b[:, 2]])
-    shells = np.array(mrtrix_b[:, 3])
-
-    bvals = np.unique(shells).tolist()
-    shell_idx = [int(np.where(bval == bvals)[0]) for bval in shells]
-
-    save_gradient_sampling_fsl(points,
-                               shell_idx,
-                               bvals,
-                               filename_bval=fsl_bval_filename,
-                               filename_bvec=fsl_bvec_filename)
 
 
 def identify_shells(bvals, threshold=40.0, roundCentroids=False, sort=False):
