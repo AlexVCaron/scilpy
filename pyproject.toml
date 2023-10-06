@@ -1,0 +1,47 @@
+[build-system]
+
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+
+name = "scilpy"
+
+version = "1.6.0"
+
+description = "Scilpy: diffusion MRI tools and utilities"
+
+license = "MIT"
+
+authors = ["The SCIL developers"]
+
+maintainers = [
+    "Arnaud Boré <arnaud.bore@gmail.com>"
+]
+
+readme = "README.md"
+
+homepage = "https://scil.usherbrooke.ca/"
+
+repository = "https://github.com/scilus/scilpy.git"
+
+documentation = "https://scil-documentation.readthedocs.io/en/latest/"
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering"
+]
+
+packages = [
+    { include = "scilpy" },
+    { include = "scripts" }
+]
+
+include = ["data"]
+
+exclude = ["*/test*", "**/test*]
