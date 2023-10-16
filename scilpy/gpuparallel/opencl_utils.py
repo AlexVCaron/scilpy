@@ -50,12 +50,29 @@ class CLManager(object):
         self.queue = cl.CommandQueue(self.context)
 
         try:
-            program = cl.Program(self.context, cl_kernel.code_string).build()
+            program = cl.Program(self.context, cl_kernel.code_string)
+            program = program.build()
             self.kernel = cl.Kernel(program, cl_kernel.entry_point)
         except cl.Error as e:
-            raise RuntimeError(
-                f"Failed to build tracking kernel. Build infos : "
-                f"{program.get_build_info(best_device)}") from e
+            def _try_get_info(fn):
+                try:
+                    return fn()
+                except BaseException:
+                    return "<Failed to get info>"
+
+            build_status = _try_get_info(lambda : program.get_build_info(
+                best_device, cl.program_build_info.STATUS))
+            devices = _try_get_info(lambda : program.get_info(
+                cl.program_info.DEVICES))
+            kernels = _try_get_info(lambda : program.get_info(
+                cl.program_info.KERNEL_NAMES))
+            build_infos = "\n".join([
+                f"Failed to build tracking kernel. Build infos : ",
+                f" - Build exit status : {build_status}",
+                f" - Kernels : {kernels}",
+                f" - Target devices : {devices}"
+            ])
+            raise RuntimeError(f"{build_infos}") from e
 
 
     class OutBuffer(object):
