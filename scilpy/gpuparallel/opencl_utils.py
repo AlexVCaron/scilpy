@@ -48,8 +48,16 @@ class CLManager(object):
 
         self.context = cl.Context(devices=[best_device])
         self.queue = cl.CommandQueue(self.context)
-        program = cl.Program(self.context, cl_kernel.code_string).build()
-        self.kernel = cl.Kernel(program, cl_kernel.entry_point)
+
+        try:
+            program = cl.Program(self.context, cl_kernel.code_string).build()
+            self.kernel = cl.Kernel(program, cl_kernel.entry_point)
+        except cl.Error as e:
+            msg = [f"Build error : {e.msg}",
+                   f"Program infos : {program.get_build_info(best_device)}"]
+            e.msg = msg.join('\n')
+            raise e
+
 
     class OutBuffer(object):
         """
