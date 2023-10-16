@@ -53,10 +53,9 @@ class CLManager(object):
             program = cl.Program(self.context, cl_kernel.code_string).build()
             self.kernel = cl.Kernel(program, cl_kernel.entry_point)
         except cl.Error as e:
-            msg = [f"Build error : {e.msg}",
-                   f"Program infos : {program.get_build_info(best_device)}"]
-            e.msg = msg.join('\n')
-            raise e
+            raise RuntimeError(
+                f"Failed to build tracking kernel. Build infos : "
+                f"{program.get_build_info(best_device)}") from e
 
 
     class OutBuffer(object):
