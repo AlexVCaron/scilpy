@@ -62,6 +62,8 @@ class CLManager(object):
 
             build_status = _try_get_info(lambda : program.get_build_info(
                 best_device, cl.program_build_info.STATUS))
+            build_log = _try_get_info(lambda : program.get_build_info(
+                best_device, cl.program_build_info.LOG))
             devices = _try_get_info(lambda : program.get_info(
                 cl.program_info.DEVICES))
             kernels = _try_get_info(lambda : program.get_info(
@@ -69,6 +71,7 @@ class CLManager(object):
             build_infos = "\n".join([
                 f"Failed to build tracking kernel. Build infos : ",
                 f" - Build exit status : {build_status}",
+                f" - Build logs : {build_log}",
                 f" - Kernels : {kernels}",
                 f" - Target devices : {devices}"
             ])
