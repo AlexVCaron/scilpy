@@ -91,7 +91,9 @@ def load_gradient_sampling_siemens(siemens_filename, b_nominal,
     with open(siemens_filename) as siemens_dvs:
         normalization, n_dirs = None, None
         while normalization is None or n_dirs is None:
-            line = siemens_dvs.readline()
+            line = siemens_dvs.readline().strip("\n")
+            if len(line) == 0:
+                continue
             if line[0] == "#":
                 continue
             if "directions" in line.lower():

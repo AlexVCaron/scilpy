@@ -8,6 +8,7 @@ Script to convert between gradients protocols files formats
 import argparse
 import logging
 import nibabel as nib
+import numpy as np
 
 from scilpy.io.utils import (add_overwrite_arg,
                              add_verbose_arg)
@@ -37,8 +38,9 @@ def _build_arg_parser():
         help='Supply input protocol in Siemens format : <protocol>.dvs file')
 
     sg = p.add_argument_group("Siemens format options")
-    sg.add_argument("--b_nominal", help="Nominal b-value to consider when "
-                                        "reading/writing a Siemens file")
+    sg.add_argument("--b_nominal", type=float,
+                    help="Nominal b-value to consider when "
+                         "reading/writing a Siemens file")
     sg.add_argument("--normalization",
                     choices=SIEMENS_NORMALIZATION,
                     default="none",
@@ -65,7 +67,7 @@ def main():
     if args.verbose:
         logging.getLogger().setLevel(logging.INFO)
 
-    ref_affine = None
+    ref_affine = np.eye(4)
     if args.reference:
         ref_affine = nib.load(args.reference).affine
 
@@ -75,13 +77,14 @@ def main():
     elif args.mrtrix is not None:
         _protocol = GradientProtocol.from_mrtrix(args.mrtrix)
     elif args.siemens is not None:
-        _protocol = GradientProtocol.from_siemens(args.siemens, ref_affine)
+        _protocol = GradientProtocol.from_siemens(args.siemens, args.b_nominal,
+                                                  ref_affine)
     else:
         parser.error("Invalid input gradient format specified. "
                      "Must be one of : {}".format(SUPPORTED_FORMATS))
 
     _protocol.save(args.target_format, args.output_fname,
-                   b_nominal=args.b_nominal,
+                   b_nominal=args.b_nominal or 1.,
                    normalization=args.normalization,
                    ref_affine=ref_affine)
 

@@ -51,13 +51,13 @@ class GradientProtocol:
         return GradientProtocol(*load_gradient_sampling_mrtrix(protocol_b))
 
     @classmethod
-    def from_siemens(cls, protocol_dvs, b_nominal=None, ref_affine=None):
+    def from_siemens(cls, protocol_dvs, b_nominal=1., ref_affine=np.eye(4)):
         return GradientProtocol(*load_gradient_sampling_siemens(
             protocol_dvs, b_nominal, ref_affine))
 
     def save(
         self, target_format, output_fname,
-        b_nominal=None, normalization="none", ref_affine=None
+        b_nominal=1., normalization="none", ref_affine=np.eye(4)
     ):
         if not self.is_initialized:
             logging.error(
