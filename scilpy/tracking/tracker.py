@@ -506,7 +506,7 @@ class GPUTacker():
     def __init__(self, sh, mask, seeds, step_size, max_nbr_pts,
                  theta=20.0, sf_threshold=0.1, sh_interp='trilinear',
                  sh_basis='descoteaux07', batch_size=100000,
-                 forward_only=False, rng_seed=None):
+                 forward_only=False, rng_seed=None, sphere=None):
         if not have_opencl:
             raise ImportError('pyopencl is not installed. In order to use'
                               'GPU tracker, you need to install it first.')
@@ -536,6 +536,8 @@ class GPUTacker():
         # Instantiate random number generator
         self.rng = np.random.default_rng(rng_seed)
 
+        self.sphere = sphere or get_sphere('symmetric724')
+
     def _get_max_amplitudes(self, B_mat):
         fodf_max = np.zeros(self.mask.shape,
                             dtype=np.float32)
@@ -555,7 +557,7 @@ class GPUTacker():
         t0 = perf_counter()
 
         # TODO: Take as class parameter
-        sphere = get_sphere('symmetric724')
+        sphere = self.sphere
 
         # Convert theta to cos(theta)
         max_cos_theta = np.cos(np.deg2rad(self.theta))

@@ -41,7 +41,7 @@ import logging
 from time import perf_counter
 from typing import Iterable
 
-from dipy.core.sphere import HemiSphere
+from dipy.core.sphere import HemiSphere, Sphere
 from dipy.data import get_sphere
 from dipy.direction import (DeterministicMaximumDirectionGetter,
                             ProbabilisticDirectionGetter)
@@ -275,12 +275,6 @@ def main():
             parser.error('Algo `{}` not supported for GPU tracking. '
                          'Set --algo to `prob` for GPU tracking.'
                          .format(args.algo))
-        if args.sphere != DEFAULT_GPU_SPHERE:
-            parser.error('Cannot use sphere `{}`. Only symmetric724 is '
-                         'available for GPU tracking.'.format(args.sphere))
-        if args.sub_sphere:
-            parser.error('Invalid argument --sub_sphere. Not implemented '
-                         'for GPU.')
     else:
         if args.batch_size is not None:
             parser.error('Invalid argument --batch_size. '
@@ -373,6 +367,8 @@ def main():
         # we'll make our streamlines twice as long,
         # to agree with DIPY's implementation
         max_strl_len = int(2.0 * args.max_length / args.step_size) + 1
+        sphere = Sphere.from_sphere(get_sphere(args.sphere))\
+            .subdivide(args.sub_sphere)
 
         # data volume
         odf_sh = odf_sh_img.get_fdata(dtype=np.float32)
@@ -386,7 +382,8 @@ def main():
             sh_basis=args.sh_basis,
             batch_size=batch_size,
             forward_only=forward_only,
-            rng_seed=args.seed)
+            rng_seed=args.seed,
+            sphere=sphere)
 
     # dump streamlines on-the-fly to file
     _save_tractogram(streamlines_generator, tracts_format,

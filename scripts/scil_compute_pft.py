@@ -44,7 +44,7 @@ import numpy as np
 
 from scilpy.io.image import get_data_as_mask
 from scilpy.io.utils import (add_overwrite_arg, add_sh_basis_args,
-                             add_verbose_arg,
+                             add_verbose_arg, add_sphere_arg,
                              assert_inputs_exist, assert_outputs_exist)
 from scilpy.tracking.tools import get_theta
 
@@ -99,6 +99,12 @@ def _build_arg_parser():
                          help='Spherical function relative threshold value '
                               'for the \ninitial direction. [%(default)s]')
     add_sh_basis_args(track_g)
+
+    add_sphere_arg(track_g, symmetric_only=False, default="repulsion724")
+    track_g.add_argument('--sub_sphere',
+                         type=int, default=0,
+                         help='Subdivides each face of the sphere into 4^s new'
+                              ' faces. [%(default)s]')
 
     seed_group = p.add_argument_group(
         'Seeding options',
@@ -191,7 +197,8 @@ def main():
         parser.error(
             'SH file is not isotropic. Tracking cannot be ran robustly.')
 
-    tracking_sphere = HemiSphere.from_sphere(get_sphere('repulsion724'))
+    tracking_sphere = HemiSphere.from_sphere(get_sphere(args.sphere))\
+        .subdivide(args.sub_sphere)
 
     # Check if sphere is unit, since we couldn't find such check in Dipy.
     if not np.allclose(np.linalg.norm(tracking_sphere.vertices, axis=1), 1.):
