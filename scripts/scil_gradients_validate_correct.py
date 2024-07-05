@@ -102,7 +102,7 @@ def main():
 
     peaks = np.squeeze(peaks)
     if args.mask:
-        mask = get_data_as_mask(nib.load(args.mask), ref_shape=peaks.shape)
+        mask = get_data_as_mask(nib.load(args.mask))
         fa[np.logical_not(mask)] = 0
         peaks[np.logical_not(mask)] = 0
 
