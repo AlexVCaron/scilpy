@@ -6,7 +6,7 @@ on:
 
 jobs:
   generate_release:
-    runs-on: scilus-runners
+    runs-on: ubuntu-latest
     steps:
       - name: Freeze requirements
         uses: ./.github/workflows/requirements.yml
