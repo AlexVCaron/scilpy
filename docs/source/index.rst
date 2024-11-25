@@ -16,5 +16,11 @@ Welcome to the scilpy documentation!
     documentation/bundle_diameter_fitting_function
     documentation/construct_participants_tsv_file
     documentation/create_overlapping_slice_mosaics
-    documentation/devcontainer
     documentation/tractogram_registration
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Development
+
+    documentation/devcontainer
+    documentation/github_actions
