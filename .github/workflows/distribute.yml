@@ -1,9 +1,12 @@
-name: Build
+name: Generate distribution
 
 on:
-  release:
-    types: [published]
-  
+  workflow_run:
+    workflows: ["Generate release"]
+    types:
+      - completed
+    branches: ["master"]
+
 jobs:
   build_wheels:
     permissions:
@@ -20,7 +23,7 @@ jobs:
         id: workspace
         run: echo "path=${GITHUB_WORKSPACE}" >> $GITHUB_OUTPUT
 
-      - name: Checkout Scilpy 
+      - name: Checkout Scilpy
         uses: actions/checkout@v4
         with:
           repository: scilus/scilpy
@@ -48,8 +51,9 @@ jobs:
           CIBW_SKIP: "*-musllinux* pp* *-win* *-win32* *aarch64"
 
       - name: Upload wheels and source to artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: scilpy-distribution
           path: |
             ${{ steps.workspace.outputs.path }}/sdist/*.whl
             ${{ steps.workspace.outputs.path }}/sdist/*.tar.gz
@@ -63,10 +67,3 @@ jobs:
           files: |
             ${{ steps.workspace.outputs.path }}/sdist/*.tar.gz
             ${{ steps.workspace.outputs.path }}/sdist/*.whl
-      
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.TESTPYPI_PASSWORD }}
-          repository-url: https://test.pypi.org/legacy/
-          packages-dir: ${{ steps.workspace.outputs.path }}/sdist/

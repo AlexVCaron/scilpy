@@ -1,0 +1,49 @@
+name : Freeze release requirements
+
+on:
+  workflow_dispatch:
+    inputs:
+      github_ref:
+        description: 'The branch or tag to freeze requirements for'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      github_ref:
+        required: true
+        type: string
+
+jobs:
+  freeze_requirements:
+    runs-on: scilus-runners
+    steps:
+      - name: Checkout scilpy
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.github_ref }}
+
+      - name: Fetch python version from repository
+        id: python-selector
+        run: echo "python-version=$(head -1 .python-version)" >> $GITHUB_OUTPUT
+
+      - name: Set up Python for Scilpy
+        uses: actions/setup-python@v5.0.0
+        with:
+          python-version: ${{ steps.python-selector.outputs.python-version }}
+          cache: 'pip'
+      
+      - name: Freeze requirements
+        id: requirements-freezer
+        run: |
+          pip install pip-tools
+          pip-compile --no-upgrade --allow-unsafe -o requirements.${{ inputs.github_ref }}.frozen
+          echo "requirements=$PWD/requirements.${{ inputs.github_ref }}.frozen" >> $GITHUB_OUTPUT
+      
+      - name: Upload frozen requirements to artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: requirements
+          path: ${{ steps.requirements-freezer.outputs.requirements }}
+          overwrite: true
+          retention-days: 1
+          include-hidden-files: true
