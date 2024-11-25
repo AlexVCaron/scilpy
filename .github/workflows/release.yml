@@ -23,7 +23,7 @@ jobs:
 
   release_container:
     needs: [generate_release]
-    uses: AlexVCaron/containers-scilus/.github/workflows/docker-builder.yml@main
+    uses: AlexVCaron/containers-scilus/.github/workflows/docker-builder.yml@test
     with:
       target: scilus
       tag: ${{ github.ref_name }}
