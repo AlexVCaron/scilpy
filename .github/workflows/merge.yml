@@ -8,7 +8,7 @@ on:
 
 jobs:
   development_container:
-    uses: scilus/containers-scilus/.github/workflows/docker-builder.yml@main
+    uses: AlexVCaron/containers-scilus/.github/workflows/docker-builder.yml@main
     with:
       target: scilus
       tag: dev
