@@ -29,4 +29,5 @@ jobs:
       tag: ${{ github.ref_name }}
       update-latest: true
       scilpy-version: ${{ github.ref_name }}
+      build-system-ref: test
     secrets: inherit

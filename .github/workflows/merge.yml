@@ -14,4 +14,5 @@ jobs:
       tag: dev
       update-latest: false
       scilpy-version: master
+      build-system-ref: test
     secrets: inherit
