@@ -1,0 +1,32 @@
+name : Generate release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  generate_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Freeze requirements
+        uses: ./.github/workflows/requirements.yml
+        with:
+          github_ref: ${{ github.ref_name }}
+
+      - uses: actions/download-artifact@v4
+        with:
+            name: requirements
+      - name: Upload frozen requirements to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files : ${{ github.workspace }}/requirements.${{ github.ref_name }}.frozen
+
+  release_container:
+    needs: [generate_release]
+    uses: scilus/containers-scilus/.github/workflows/docker-builder.yml@main
+    with:
+      target: scilus
+      tag: ${{ github.ref_name }}
+      update-latest: true
+      scilpy-version: ${{ github.ref_name }}
+    secrets: inherit

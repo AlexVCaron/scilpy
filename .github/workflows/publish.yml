@@ -1,0 +1,33 @@
+name: Publish Scilpy
+
+on:
+  workflow_run:
+    workflows: ["Generate distribution"]
+    types:
+      - completed
+    branches: ["master"]
+  
+jobs:
+  build_wheels:
+    permissions:
+      contents: write
+
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+
+    steps:
+      - name: Download distribution from artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: scilpy-distribution
+          path: ${{ github.workspace }}/sdist
+      
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.TESTPYPI_PASSWORD }}
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: ${{ github.workspace }}/sdist/
