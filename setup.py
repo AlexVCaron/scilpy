@@ -93,7 +93,8 @@ opts = dict(name=NAME,
             data_files=[('data/LUT',
                          ["data/LUT/freesurfer_desikan_killiany.json",
                           "data/LUT/freesurfer_subcortical.json",
-                          "data/LUT/dk_aggregate_structures.json"])],
+                          "data/LUT/dk_aggregate_structures.json"]),
+                        ('data', ["data/test_data.json"])],
             include_package_data=True)
 
 setup(**opts)
