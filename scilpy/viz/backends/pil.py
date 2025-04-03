@@ -324,7 +324,7 @@ def draw_2d_array_at_position(canvas, array_2d, size,
             overlays_colors = generate_n_colors(len(overlays))
 
         for img, color in zip(overlays, overlays_colors):
-            overlay = create_image_from_2d_array(img * color, size, "RGB")
+            overlay = create_image_from_2d_array(np.atleast_3d(img) * color, size, "RGB")
 
             # Create transparency mask over the mask overlay image
             overlay_transparency = create_image_from_2d_array(
