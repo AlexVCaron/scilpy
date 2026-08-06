@@ -23,6 +23,7 @@ jobs:
       - name: Checkout Scilpy 
         uses: actions/checkout@v7
         with:
+          repository: scilus/scilpy
           ref: ${{ github.ref_name }}
           path: ${{ steps.workspace.outputs.path }}/scilpy
 

@@ -21,6 +21,7 @@ env:
 jobs:
   test:
     runs-on: scilus-large
+    if: github.repository == 'scilus/scilpy'
 
     steps:
       - name: Checkout repository at merge
@@ -96,6 +97,7 @@ jobs:
 
   coverage:
     runs-on: ubuntu-latest
+    if: github.repository == 'scilus/scilpy'
     needs: test
 
     steps:

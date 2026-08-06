@@ -9,7 +9,7 @@ jobs:
     runs-on: scilus-default
     steps:
       - name: Checkout scilpy
-        uses: actions/checkout@v7
+        uses: actions/checkout@v3
 
       - name: Fetch python version from repository
         id: python-selector
