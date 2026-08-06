@@ -5,12 +5,12 @@ on:
     branches:
       - master
     paths:
-      - 'scilpy/ml/**'
+      - 'src/scilpy/ml/**'
   pull_request:
     branches:
       - master
     paths:
-      - 'scilpy/ml/**'
+      - 'src/scilpy/ml/**'
   merge_group:
         
 concurrency:
@@ -25,7 +25,6 @@ env:
 jobs:
   test-ml:
     runs-on: scilus-large
-    if: github.repository == 'scilus/scilpy'
     steps:
       - name: Checkout repository at merge
         uses: actions/checkout@v7
