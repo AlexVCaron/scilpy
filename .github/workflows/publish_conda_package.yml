@@ -1,0 +1,54 @@
+name: Publish Conda Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    name: Build and publish conda package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: build-env
+          python-version: "3.11"
+          channels: conda-forge,defaults
+          channel-priority: strict
+          auto-activate-base: false
+
+      - name: Install conda-build and anaconda-client
+        shell: bash -el {0}
+        run: conda install -y conda-build anaconda-client
+
+      - name: Update recipe version to match release tag
+        shell: bash -el {0}
+        run: |
+          # Strip leading 'v' from tag (e.g. v2.3.0 -> 2.3.0)
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/^{% set version = .* %}/{% set version = \"${VERSION}\" %}/" conda-recipe/meta.yaml
+
+      - name: Build conda package
+        shell: bash -el {0}
+        run: |
+          conda build conda-recipe/ \
+            --channel conda-forge \
+            --no-anaconda-upload \
+            --output-folder /tmp/conda-bld
+
+      - name: Upload conda package to Anaconda.org
+        shell: bash -el {0}
+        env:
+          ANACONDA_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
+        run: |
+          anaconda -t "${ANACONDA_TOKEN}" upload \
+            --user scilus \
+            --label main \
+            /tmp/conda-bld/**/*.tar.bz2
