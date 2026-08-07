@@ -29,6 +29,21 @@ We highly encourage to install scilpy in a virtual environnement. Once done and 
 
 ## Install scilpy as a user
 
+### Using conda (recommended for reproducible environments)
+
+Scilpy is available on the [scilus Anaconda channel](https://anaconda.org/scilus/scilpy).
+This is the easiest way to get a fully pinned, reproducible environment on Linux and macOS:
+
+```bash
+conda install -c scilus -c conda-forge scilpy
+```
+
+> **Note:** A few optional runtime dependencies (`bctpy`, `bz2file`, `formulaic`,
+> `numba-kdtree`, `PyMCubes`) are not yet on conda-forge and are installed
+> automatically from PyPI during the conda package build.
+
+### Using pip / uv
+
 ```
 # If you are using Python3.11, export this variable before installing
 export SETUPTOOLS_USE_DISTUTILS=stdlib

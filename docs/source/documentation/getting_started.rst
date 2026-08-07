@@ -13,6 +13,23 @@ Installation
 #############
 ⚠️ We highly suggest to install uv to speedup scilpy installation: https://docs.astral.sh/uv/getting-started/installation/
 
+Using conda (recommended for reproducible environments)
+*******************************************************
+
+Scilpy is available on the `scilus Anaconda channel <https://anaconda.org/scilus/scilpy>`_.
+This is the easiest way to get a fully pinned, reproducible environment on Linux and macOS:
+
+.. code-block:: bash
+
+    conda install -c scilus -c conda-forge scilpy
+
+.. note::
+    A few optional runtime dependencies (``bctpy``, ``bz2file``, ``formulaic``,
+    ``numba-kdtree``, ``PyMCubes``) are not yet on conda-forge and are installed
+    automatically from PyPI during the conda package build.
+
+Using pip / uv
+**************
 
 .. code-block:: bash
 
