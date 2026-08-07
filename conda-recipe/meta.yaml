@@ -9,21 +9,13 @@ source:
 
 build:
   number: 0
-  # dmri-amico and dmri-commit are not available on conda-forge or any
-  # mainstream conda channel. They are delivered via PyPI only.
-  # Until upstream conda packages exist for those two dependencies, the
-  # conda package build is BLOCKED: it cannot satisfy all required runtime
-  # dependencies through conda alone.
-  #
-  # Workaround attempted: install via pip inside the build (post-link script)
-  # but that makes the environment non-reproducible and is rejected by
-  # conda-forge policy.
-  #
-  # Status: blocked on dmri-amico and dmri-commit conda packaging.
-  # See: https://github.com/daducci/AMICO  (no conda recipe)
-  #      https://github.com/daducci/COMMIT (no conda recipe)
-  skip: true  # [True]  # Remove this line once dmri-amico / dmri-commit are on conda-forge
-  script: {{ PYTHON }} -m pip install . --no-deps -vv
+  # Five runtime dependencies are not on conda-forge; install them from PyPI
+  # with --no-deps before installing scilpy itself. This is an accepted pattern
+  # for leaf dependencies that are pure Python or ship pre-built wheels.
+  script: |
+    pip install "bctpy==0.6.*" "bz2file==0.98" "formulaic==0.5.*" \
+      "numba-kdtree==0.4.*" "PyMCubes==0.1.*" --no-deps -q
+    {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -q
 
 requirements:
   host:
@@ -31,56 +23,47 @@ requirements:
     - pip
     - setuptools >=64
     - setuptools_scm
-    - cython 3.0.*
-    - numpy 1.26.*
+    - cython =3.0
+    - numpy =1.26
   run:
     - python >=3.11,<3.13
-    - bctpy 0.6.*
-    - bids-validator 1.14.*
-    - bz2file 0.98
-    - coloredlogs 15.0.*
-    - cvxpy 1.6.*
-    - cycler 0.12.*
+    - bids-validator =1.14
+    - coloredlogs =15.0
+    - cvxpy =1.6
+    - cycler =0.12
     - deepdiff >=8.1,<8.7
-    - dipy 1.12.*
-    # dmri-amico and dmri-commit are REQUIRED runtime dependencies but are
-    # not available on conda-forge. This recipe is currently incomplete and
-    # cannot produce a working conda package without them.
-    # - dmri-amico 2.1.*        # NOT on conda-forge
-    # - dmri-commit >=2.4.2,<2.5  # NOT on conda-forge
-    - docopt 0.6.*
-    - dvc 3.59.*
-    - formulaic 0.5.*
-    - fury 0.12.*
-    - future 1.0.*
-    - gitpython 3.1.*
-    - h5py 3.12.*
-    - joblib 1.4.*
-    - kiwisolver 1.4.*
-    - matplotlib 3.10.*
-    - nibabel 5.3.*
-    - nilearn 0.11.*
-    - nltk 3.9.*
-    - numba 0.61.*
-    - numba-kdtree 0.4.*
-    - numpy 1.26.*
-    - openpyxl 3.1.*
-    - packaging 24.*
-    - pathspec 0.12.*
-    - pybids 0.22.*
-    - pymcubes 0.1.*
-    - pyparsing 3.2.*
-    - pysocks 1.7.*
-    - python-dateutil 2.9.*
-    - pytz 2024.2
-    - requests 2.32.*
-    - scikit-image 0.25.*
-    - scikit-learn 1.6.*
-    - scipy 1.15.*
-    - six 1.17.*
-    - statsmodels 0.14.*
-    - trimeshpy 0.0.*
-    - vtk 9.3.*
+    - dipy >=1.12.1,<1.13
+    - scilpy-dmri-amico =2.1
+    - scilpy-dmri-commit >=2.4.2,<2.5
+    - docopt =0.6
+    - dvc =3.59
+    - fury =0.12
+    - future =1.0
+    - gitpython =3.1
+    - h5py =3.12
+    - joblib =1.4
+    - kiwisolver =1.4
+    - matplotlib =3.10
+    - nibabel =5.3
+    - nilearn =0.11
+    - nltk =3.9
+    - numba =0.61
+    - numpy =1.26
+    - openpyxl =3.1
+    - packaging =24
+    - pathspec =0.12
+    - pybids =0.22
+    - pyparsing =3.2
+    - pysocks =1.7
+    - python-dateutil =2.9
+    - pytz =2024.2
+    - requests =2.32
+    - scikit-image =0.25
+    - scikit-learn =1.6
+    - scipy =1.15
+    - six =1.17
+    - statsmodels =0.14
+    - vtk =9.3
 
 test:
   imports:
@@ -98,11 +81,10 @@ about:
     together with each Scilpy release and must match the frozen release
     requirements file distributed with that release.
 
-    IMPORTANT: This recipe is currently INCOMPLETE. The required runtime
-    dependencies dmri-amico and dmri-commit are not available on conda-forge
-    or any supported conda channel. The conda package cannot be built in a
-    reproducible, policy-compliant way until those packages are available
-    on a conda channel. See the commented lines in the run requirements above.
+    Five runtime dependencies not available on conda-forge (bctpy, bz2file,
+    formulaic, numba-kdtree, PyMCubes) are installed via pip inside the build
+    script. Two dependencies (scilpy-dmri-amico, scilpy-dmri-commit) are
+    provided as separate conda packages from the scilpy channel.
   doc_url: https://scilpy.readthedocs.io/
   dev_url: https://github.com/scilus/scilpy
 
