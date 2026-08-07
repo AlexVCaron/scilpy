@@ -22,6 +22,18 @@ Installation
     uv pip install scilpy # For the most recent release from PyPi
     pip install "gdown>=6.0.0" # To download the data for the tutorials
 
+For development or running tests, install the optional test dependencies:
+
+.. code-block:: bash
+
+    # Developer/test install (includes all pytest packages)
+    uv pip install "scilpy[test]"
+
+    # Or install from source with test dependencies
+    git clone https://github.com/scilus/scilpy.git
+    cd scilpy
+    uv pip install -e ".[test]"
+
 
 Download data
 #############
