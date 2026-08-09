@@ -29,6 +29,22 @@ We highly encourage to install scilpy in a virtual environnement. Once done and 
 
 ## Install scilpy as a user
 
+### Using conda (recommended for reproducible environments)
+
+Scilpy is available on the [scilus Anaconda channel](https://anaconda.org/scilus/scilpy).
+This is the easiest way to get a fully pinned, reproducible environment on Linux and macOS:
+
+```bash
+conda install -c scilus -c conda-forge scilpy gdown
+```
+
+> **Note:** Nine runtime dependencies that are not on conda-forge (`dmri-amico`,
+> `dmri-commit`, `trimeshpy`, `bctpy`, `bz2file`, `formulaic`, `numba-kdtree`,
+> `PyMCubes`) are bundled directly into the scilpy conda package at build time.
+> No extra channels or manual pip steps are required.
+
+### Using pip / uv
+
 ```
 # If you are using Python3.11, export this variable before installing
 export SETUPTOOLS_USE_DISTUTILS=stdlib

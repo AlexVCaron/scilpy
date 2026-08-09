@@ -64,12 +64,11 @@ jobs:
         run: |
           uv pip install --upgrade pip wheel
           uv pip install --upgrade "setuptools<71.0.0" 
-          uv pip install -e .
+          uv pip install -e ".[test]"
           # TODO: to adapt once Scilpy passes to VTK 9.4.0, which selects OSMesa at runtime
           # https://discourse.vtk.org/t/status-update-runtime-opengl-render-window-selection-in-vtk/14583
           VTK_VERSION=$(cat pyproject.toml | grep 'vtk==' | sed 's/vtk==//g' | sed 's/\"//g' )
           pip install --extra-index-url https://wheels.vtk.org vtk-osmesa==$VTK_VERSION
-          uv pip install pytest-xdist pytest-cov
           scil_data_download
           scil_search_keywords test --regenerate_help_files --processes 8
 

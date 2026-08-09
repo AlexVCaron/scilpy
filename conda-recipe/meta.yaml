@@ -1,0 +1,102 @@
+{% set version = "2.3.0" %}
+
+package:
+  name: scilpy
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/s/scilpy/scilpy-{{ version }}.tar.gz
+
+build:
+  number: 0
+  # Nine runtime dependencies are not on conda-forge; install them from PyPI
+  # with --no-deps so they land in the build prefix and get bundled into the
+  # scilpy package. Order: pure-Python leaf deps first, C-extension packages
+  # next, then the AMICO/COMMIT stack (which requires dipy/numpy already
+  # present in the host environment).
+  script: |
+    pip install \
+      "bctpy==0.6.*" \
+      "bz2file==0.98" \
+      "formulaic==0.5.*" \
+      "trimeshpy==0.0.*" \
+      "numba-kdtree==0.4.*" \
+      "PyMCubes==0.1.*" \
+      "dmri-amico==2.1.*" \
+      "dmri-commit>=2.4.2,<2.5" \
+      --no-deps -q
+    {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -q
+
+requirements:
+  host:
+    - python >=3.11,<3.13
+    - pip
+    - setuptools >=64
+    - setuptools_scm
+    - cython =3.0
+    - numpy =1.26
+  run:
+    - python >=3.11,<3.13
+    - bids-validator =1.14
+    - coloredlogs =15.0
+    - cvxpy =1.6
+    - cycler =0.12
+    - deepdiff >=8.1,<8.7
+    - dipy >=1.12.1,<1.13
+    - docopt =0.6
+    - dvc =3.59
+    - fury =0.12
+    - future =1.0
+    - gitpython =3.1
+    - h5py =3.12
+    - joblib =1.4
+    - kiwisolver =1.4
+    - matplotlib =3.10
+    - nibabel =5.3
+    - nilearn =0.11
+    - nltk =3.9
+    - numba =0.61
+    - numpy =1.26
+    - openpyxl =3.1
+    - packaging =24
+    - pathspec =0.12
+    - pybids =0.22
+    - pyparsing =3.2
+    - pysocks =1.7
+    - python-dateutil =2.9
+    - pytz =2024.2
+    - requests =2.32
+    - scikit-image =0.25
+    - scikit-learn =1.6
+    - scipy =1.15
+    - six =1.17
+    - statsmodels =0.14
+    - vtk =9.3
+
+test:
+  imports:
+    - scilpy
+  commands:
+    - scil_get_version --help
+
+about:
+  home: https://github.com/scilus/scilpy
+  license: MIT
+  summary: "Scilpy: diffusion MRI tools and utilities from the SCIL lab"
+  description: |
+    Scilpy provides scripts and utilities for diffusion MRI data processing.
+    This conda recipe is release-coupled: dependency pins must be updated
+    together with each Scilpy release and must match the frozen release
+    requirements file distributed with that release.
+
+    Nine runtime dependencies not available on conda-forge are installed via
+    pip inside the build script and bundled directly into this package:
+    bctpy, bz2file, formulaic, trimeshpy, numba-kdtree, PyMCubes,
+    dmri-amico, and dmri-commit. Users get everything with a single
+    ``conda install -c scilus -c conda-forge scilpy``.
+  doc_url: https://scilpy.readthedocs.io/
+  dev_url: https://github.com/scilus/scilpy
+
+extra:
+  recipe-maintainers:
+    - scilus
