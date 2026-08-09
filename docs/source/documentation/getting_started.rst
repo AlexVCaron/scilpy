@@ -22,11 +22,14 @@ This is the easiest way to get a fully pinned, reproducible environment on Linux
 .. code-block:: bash
 
     conda install -c scilus -c conda-forge scilpy
+    pip install "gdown>=6.0.0"  # To download the data for the tutorials
 
 .. note::
-    A few optional runtime dependencies (``bctpy``, ``bz2file``, ``formulaic``,
-    ``numba-kdtree``, ``PyMCubes``) are not yet on conda-forge and are installed
-    automatically from PyPI during the conda package build.
+    Nine runtime dependencies that are not on conda-forge (``dmri-amico``,
+    ``dmri-commit``, ``trimeshpy``, ``bctpy``, ``bz2file``, ``formulaic``,
+    ``numba-kdtree``, ``PyMCubes``) are bundled directly into the scilpy
+    conda package at build time. No extra channels or manual pip steps are
+    required.
 
 Using pip / uv
 **************
