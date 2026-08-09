@@ -21,8 +21,7 @@ This is the easiest way to get a fully pinned, reproducible environment on Linux
 
 .. code-block:: bash
 
-    conda install -c scilus -c conda-forge scilpy
-    pip install "gdown>=6.0.0"  # To download the data for the tutorials
+    conda install -c scilus -c conda-forge scilpy gdown
 
 .. note::
     Nine runtime dependencies that are not on conda-forge (``dmri-amico``,

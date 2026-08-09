@@ -35,8 +35,7 @@ Scilpy is available on the [scilus Anaconda channel](https://anaconda.org/scilus
 This is the easiest way to get a fully pinned, reproducible environment on Linux and macOS:
 
 ```bash
-conda install -c scilus -c conda-forge scilpy
-pip install "gdown>=6.0.0"  # To download the data for the tutorials
+conda install -c scilus -c conda-forge scilpy gdown
 ```
 
 > **Note:** Nine runtime dependencies that are not on conda-forge (`dmri-amico`,
