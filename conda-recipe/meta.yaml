@@ -9,12 +9,22 @@ source:
 
 build:
   number: 0
-  # Five runtime dependencies are not on conda-forge; install them from PyPI
-  # with --no-deps before installing scilpy itself. This is an accepted pattern
-  # for leaf dependencies that are pure Python or ship pre-built wheels.
+  # Nine runtime dependencies are not on conda-forge; install them from PyPI
+  # with --no-deps so they land in the build prefix and get bundled into the
+  # scilpy package. Order: pure-Python leaf deps first, C-extension packages
+  # next, then the AMICO/COMMIT stack (which requires dipy/numpy already
+  # present in the host environment).
   script: |
-    pip install "bctpy==0.6.*" "bz2file==0.98" "formulaic==0.5.*" \
-      "numba-kdtree==0.4.*" "PyMCubes==0.1.*" --no-deps -q
+    pip install \
+      "bctpy==0.6.*" \
+      "bz2file==0.98" \
+      "formulaic==0.5.*" \
+      "trimeshpy==0.0.*" \
+      "numba-kdtree==0.4.*" \
+      "PyMCubes==0.1.*" \
+      "dmri-amico==2.1.*" \
+      "dmri-commit>=2.4.2,<2.5" \
+      --no-deps -q
     {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -q
 
 requirements:
@@ -33,8 +43,6 @@ requirements:
     - cycler =0.12
     - deepdiff >=8.1,<8.7
     - dipy >=1.12.1,<1.13
-    - scilpy-dmri-amico =2.1
-    - scilpy-dmri-commit >=2.4.2,<2.5
     - docopt =0.6
     - dvc =3.59
     - fury =0.12
@@ -81,10 +89,11 @@ about:
     together with each Scilpy release and must match the frozen release
     requirements file distributed with that release.
 
-    Five runtime dependencies not available on conda-forge (bctpy, bz2file,
-    formulaic, numba-kdtree, PyMCubes) are installed via pip inside the build
-    script. Two dependencies (scilpy-dmri-amico, scilpy-dmri-commit) are
-    provided as separate conda packages from the scilpy channel.
+    Nine runtime dependencies not available on conda-forge are installed via
+    pip inside the build script and bundled directly into this package:
+    bctpy, bz2file, formulaic, trimeshpy, numba-kdtree, PyMCubes,
+    dmri-amico, and dmri-commit. Users get everything with a single
+    ``conda install -c scilus -c conda-forge scilpy``.
   doc_url: https://scilpy.readthedocs.io/
   dev_url: https://github.com/scilus/scilpy
 
